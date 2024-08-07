@@ -69,3 +69,5 @@ gem 'rack-attack'
 gem 'sidekiq'
 
 gem 'kaminari'
+
+gem 'replicate-rails', require: 'replicate_rails'

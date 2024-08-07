@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2024_04_14_054955) do
+ActiveRecord::Schema[7.0].define(version: 2024_08_07_142616) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
   enable_extension "plpgsql"
@@ -102,6 +102,22 @@ ActiveRecord::Schema[7.0].define(version: 2024_04_14_054955) do
     t.string "processor"
     t.string "event_type"
     t.jsonb "event"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "replicated_calls", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "user_id", null: false
+    t.string "predict_id", null: false
+    t.integer "seed"
+    t.string "prompt", null: false
+    t.integer "num_outputs"
+    t.string "aspect_ratio"
+    t.string "output_format"
+    t.integer "output_quality"
+    t.boolean "disable_safety_checker"
+    t.string "output"
+    t.jsonb "data"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end

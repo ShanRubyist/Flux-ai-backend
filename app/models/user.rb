@@ -12,4 +12,6 @@ class User < ActiveRecord::Base
   include DeviseTokenAuth::Concerns::User
 
   pay_customer default_payment_processor: ENV.fetch('PAYMENT_PROCESSOR').to_sym
+
+  has_many :replicated_calls
 end

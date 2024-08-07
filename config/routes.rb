@@ -2,6 +2,8 @@ Rails.application.routes.draw do
   mount_devise_token_auth_for 'User', at: 'auth', controllers:
     { omniauth_callbacks: 'users/omniauth_callbacks' }
 
+  mount ReplicateRails::Engine => "/replicate/webhook"
+
   # require 'sidekiq/web'
   # authenticate :user, lambda { |u| u.admin? } do
   #   mount Sidekiq::Web => '/sidekiq'
@@ -32,6 +34,12 @@ Rails.application.routes.draw do
       resources :info do
         collection do
 
+        end
+      end
+
+      resources :replicate do
+        collection do
+          post 'predict' => 'replicate#predict', as: 'predict'
         end
       end
     end
