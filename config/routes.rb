@@ -27,8 +27,8 @@ Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
 
-      get 'user_info',to: 'info#user_info'
-      get 'payment_info',to: 'info#payment_info'
+      get 'user_info', to: 'info#user_info'
+      get 'payment_info', to: 'info#payment_info'
       get 'active_subscription_info', to: 'info#active_subscription_info', as: 'active_subscription_info'
 
       resources :info do
@@ -40,6 +40,14 @@ Rails.application.routes.draw do
       resources :replicate do
         collection do
           post 'predict' => 'replicate#predict', as: 'predict'
+        end
+      end
+
+      namespace :admin do
+        resources :dashboard do
+          collection do
+          get 'staticstics_info' => 'dashboard#statistics_info'
+          end
         end
       end
     end
