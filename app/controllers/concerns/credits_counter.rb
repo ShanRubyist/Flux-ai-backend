@@ -15,14 +15,17 @@ module CreditsCounter
   end
 
   def left_credits(user)
-    credits = total_credits(user) - total_used_credits(user)
+    credits = total_credits(user) - total_used_credits(user) + 10
 
     credits = 0 if credits < 0
     return credits
   end
 
   def used_credits(user, usage_klass_name)
-    user.send(usage_klass_name).count
+    # TODO: refactor
+    user.send(usage_klass_name)
+        .where("replicated_calls.data->>'status' = ?", 'succeeded')
+        .sum(:cost_credits)
   end
 
   def usage_classes

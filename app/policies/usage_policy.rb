@@ -7,7 +7,8 @@ class UsagePolicy < ApplicationPolicy
   end
 
   def create?
-    return true if !has_payment? || credits_enough?
+    return true if credits_enough?
+    # return true if !has_payment? || credits_enough?
   end
 
   private
