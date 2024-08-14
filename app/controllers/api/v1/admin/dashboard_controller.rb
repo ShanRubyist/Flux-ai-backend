@@ -1,16 +1,14 @@
 class Api::V1::Admin::DashboardController < Api::V1::AdminController
 
   def statistics_info
-    freemium_credits = 5
-
     total_users = User.all.size
     total_paid_users = -1
     total_generated_user = User.joins(:replicated_calls).distinct.count
     total_images = ReplicatedCall.all.size
     total_paid_dollar = -1
-    total_paid_credits = -1
+    total_paid_credits = 0
     total_cost_dollar = -1
-    total_cost_credits = #ReplicatedCall.all.inject(0) { |sum, item| sum + item.cost_credits }
+    total_cost_credits = ReplicatedCall.where("replicated_calls.data->>'status' = ?", 'succeeded').sum(:cost_credits)
     total_left_dollar = -1
     total_left_credits = total_paid_credits - total_cost_credits
 
@@ -24,10 +22,13 @@ class Api::V1::Admin::DashboardController < Api::V1::AdminController
     today_paid_dollar = -1
     today_paid_credits = -1
     today_cost_dollar = -1
-    today_cost_credits = #ReplicatedCall.where(created_at: Time.current.beginning_of_day..Time.current.end_of_day).inject(0) { |sum, item| sum + item.cost_credits }
+    today_cost_credits = ReplicatedCall
+                           .where(created_at: Time.current.beginning_of_day..Time.current.end_of_day)
+                           .where("replicated_calls.data->>'status' = ?", 'succeeded')
+                           .sum(:cost_credits)
 
-    freeium_total_credits = total_users * freemium_credits
-    freeium_cost_credits = -1
+    freeium_total_credits = total_users * (ENV.fetch('FREEMIUM_CREDITS') { 0 }).to_i
+    freeium_cost_credits = total_cost_credits
     freeium_left_credits = freeium_total_credits - freeium_cost_credits
     freeium_run_out_users = -1
     # User.joins(:replicated_calls)
@@ -39,7 +40,14 @@ class Api::V1::Admin::DashboardController < Api::V1::AdminController
     user_top_paid_dollar = -1
     user_top_paid_credits = -1
     user_top_cost_dollar = -1
-    user_top_cost_credits = -1
+    user_top_cost_credits = User.joins(:replicated_calls)
+                                .group("users.id")
+                                .select("users.id, sum(cost_credits) as cost_credits")
+                                .order('cost_credits desc')
+                                .limit(1)
+                                .first
+                                .cost_credits
+
     user_top_generated_images = User.joins(:replicated_calls)
                                     .group("users.id")
                                     .select("users.id, users.email, COUNT(*) as call_count")

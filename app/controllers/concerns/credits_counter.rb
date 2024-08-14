@@ -15,7 +15,7 @@ module CreditsCounter
   end
 
   def left_credits(user)
-    credits = total_credits(user) - total_used_credits(user) + 10
+    credits = total_credits(user) - total_used_credits(user) + (ENV.fetch('FREEMIUM_CREDITS') { 0 }).to_i
 
     credits = 0 if credits < 0
     return credits
