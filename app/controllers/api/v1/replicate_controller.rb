@@ -3,8 +3,6 @@ class Api::V1::ReplicateController < UsageController
   # render json: { error: e }.to_json, status: 500
   # end
 
-  before_action :authenticate_user!
-
   def predict
     prompt = params['prompt']
     raise 'prompt can not be empty' unless prompt.present?
