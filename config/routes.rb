@@ -2,7 +2,7 @@ Rails.application.routes.draw do
   mount_devise_token_auth_for 'User', at: 'auth', controllers:
     { omniauth_callbacks: 'users/omniauth_callbacks' }
 
-  mount ReplicateRails::Engine => "/replicate/webhook"
+  # mount ReplicateRails::Engine => "/replicate/webhook"
 
   # require 'sidekiq/web'
   # authenticate :user, lambda { |u| u.admin? } do

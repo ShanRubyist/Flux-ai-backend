@@ -3,6 +3,6 @@ class Api::V1::AdminController < ApplicationController
   before_action :check_authorization!
 
   def check_authorization!
-    authorize :admin, :is_admin?
+    authorize :admin, :admin?
   end
 end
