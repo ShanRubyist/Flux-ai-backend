@@ -9,13 +9,15 @@ class Api::V1::ReplicateController < UsageController
     prompt = params['prompt']
     raise 'prompt can not be empty' unless prompt.present?
 
+    aspect_ratio = params['aspect_ratio'] || '1:1'
+
     model_name = params['model'] || 'black-forest-labs/flux-schnell'
     model = Replicate.client.retrieve_model(model_name)
     version = model.latest_version
 
     begin
       # webhook_url = "https://" + ENV.fetch("HOST") + "/replicate/webhook"
-      prediction = version.predict(prompt: prompt)
+      prediction = version.predict(prompt: prompt, aspect_ratio: aspect_ratio)
       data = prediction.refetch
 
       until prediction.finished? do
