@@ -29,7 +29,7 @@ class Api::V1::ReplicateController < UsageController
       }
 
     ensure
-      save_to_db({ model_name: model_name, params: params, data: data })
+      save_to_db({ model_name: model_name, aspect_ratio: aspect_ratio, params: params, data: data })
     end
   end
 
@@ -57,6 +57,7 @@ class Api::V1::ReplicateController < UsageController
 
   def save_to_db(h)
     model_name = h.fetch(:model_name)
+    aspect_ratio = h.fetch(:aspect_ratio)
     params = h.fetch(:params) { {} }
     prompt = params.fetch(:prompt)
     data = h.fetch(:data) { {} }
@@ -76,7 +77,7 @@ class Api::V1::ReplicateController < UsageController
 
     current_user
       .replicated_calls
-      .create_with(data: data, output: output, prompt: prompt, cost_credits: cost_credits, model: model_name)
+      .create_with(data: data, output: output, prompt: prompt, aspect_ratio: aspect_ratio, cost_credits: cost_credits, model: model_name)
       .find_or_create_by(predict_id: predict_id)
 
     require 'open-uri'
@@ -84,6 +85,9 @@ class Api::V1::ReplicateController < UsageController
       .replicated_calls
       .find_by(predict_id: predict_id)
       .image
-      .attach(io: open(output.first), filename: 'image.jpg') unless output.first.empty?
+      .attach(io: URI.open(output.first), filename: URI(output.first).path.split('/').last) unless output.first.empty?
+
+  rescue => e
+    puts e
   end
 end
