@@ -33,6 +33,26 @@ class Api::V1::ReplicateController < UsageController
     end
   end
 
+  def generated_images
+    replicated_calls = current_user
+                         .replicated_calls
+                         .where("replicated_calls.data->>'status' = ?", 'succeeded')
+                         .order("created_at desc")
+
+    result = replicated_calls.map do |item|
+      {
+        image: (url_for(item.image) rescue nil),
+        prompt: item.prompt,
+        created_at: item.created_at,
+        aspect_ratio: item.aspect_ratio,
+        cost_credits: item.cost_credits,
+        model: item.model
+      }
+    end
+
+    render json: result
+  end
+
   private
 
   def save_to_db(h)
@@ -56,7 +76,14 @@ class Api::V1::ReplicateController < UsageController
 
     current_user
       .replicated_calls
-      .create_with(data: data, output: output, prompt: prompt, cost_credits: cost_credits)
+      .create_with(data: data, output: output, prompt: prompt, cost_credits: cost_credits, model: model_name)
       .find_or_create_by(predict_id: predict_id)
+
+    require 'open-uri'
+    current_user
+      .replicated_calls
+      .find_by(predict_id: predict_id)
+      .image
+      .attach(io: open(output.first), filename: 'image.jpg') unless output.first.empty?
   end
 end

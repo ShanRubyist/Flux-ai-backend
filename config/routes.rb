@@ -40,13 +40,14 @@ Rails.application.routes.draw do
       resources :replicate do
         collection do
           post 'predict' => 'replicate#predict', as: 'predict'
+          get 'generated_images' => 'replicate#generated_images'
         end
       end
 
       namespace :admin do
         resources :dashboard do
           collection do
-          get 'staticstics_info' => 'dashboard#statistics_info'
+            get 'staticstics_info' => 'dashboard#statistics_info'
           end
         end
       end

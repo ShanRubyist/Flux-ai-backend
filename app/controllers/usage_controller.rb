@@ -2,7 +2,7 @@ class UsageController < ApplicationController
   before_action :authenticate_user!
 
   include Usage
-  before_action :check_credits
+  before_action :check_credits, only: [:predict]
 
   private
 
