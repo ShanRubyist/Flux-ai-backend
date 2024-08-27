@@ -29,7 +29,8 @@ class Api::V1::ReplicateController < UsageController
       }
 
     ensure
-      save_to_db({ model_name: model_name, aspect_ratio: aspect_ratio, params: params, data: data })
+      params.permit(:prompt, :aspect_ratio, :model)
+      SavePicToOssJob.perform_later({user: current_user, model_name: model_name, aspect_ratio: aspect_ratio, prompt: prompt, data: data })
     end
   end
 
@@ -54,40 +55,4 @@ class Api::V1::ReplicateController < UsageController
   end
 
   private
-
-  def save_to_db(h)
-    model_name = h.fetch(:model_name)
-    aspect_ratio = h.fetch(:aspect_ratio)
-    params = h.fetch(:params) { {} }
-    prompt = params.fetch(:prompt)
-    data = h.fetch(:data) { {} }
-    output = data.fetch("output")
-    predict_id = data.fetch("id")
-    cost_credits =
-      case model_name
-      when nil
-        1
-      when 'black-forest-labs/flux-schnell'
-        1
-      when 'black-forest-labs/flux-dev'
-        10
-      when 'black-forest-labs/flux-pro'
-        20
-      end
-
-    current_user
-      .replicated_calls
-      .create_with(data: data, output: output, prompt: prompt, aspect_ratio: aspect_ratio, cost_credits: cost_credits, model: model_name)
-      .find_or_create_by(predict_id: predict_id)
-
-    require 'open-uri'
-    current_user
-      .replicated_calls
-      .find_by(predict_id: predict_id)
-      .image
-      .attach(io: URI.open(output.first), filename: URI(output.first).path.split('/').last) unless output.first.empty?
-
-  rescue => e
-    puts e
-  end
 end
