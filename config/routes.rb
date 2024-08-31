@@ -48,6 +48,7 @@ Rails.application.routes.draw do
         resources :dashboard do
           collection do
             get 'staticstics_info' => 'dashboard#statistics_info'
+            get 'generated_images' => 'dashboard#generated_images'
           end
         end
       end
