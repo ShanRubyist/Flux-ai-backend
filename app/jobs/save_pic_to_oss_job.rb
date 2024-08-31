@@ -1,7 +1,7 @@
 class SavePicToOssJob < ApplicationJob
   queue_as :default
 
-  def perform(**args)
+  def perform(args)
     save_to_db(args)
   end
 
@@ -15,17 +15,21 @@ class SavePicToOssJob < ApplicationJob
     data = h.fetch(:data) { {} }
     output = data.fetch("output")
     predict_id = data.fetch("id")
-    cost_credits =
-      case model_name
-      when nil
-        1
-      when 'black-forest-labs/flux-schnell'
-        1
-      when 'black-forest-labs/flux-dev'
-        10
-      when 'black-forest-labs/flux-pro'
-        20
-      end
+    if data.fetch('status') == 'succeeded'
+      cost_credits =
+        case model_name
+        when nil
+          1
+        when 'black-forest-labs/flux-schnell'
+          1
+        when 'black-forest-labs/flux-dev'
+          10
+        when 'black-forest-labs/flux-pro'
+          20
+        end
+    else
+      cost_credits = 0
+    end
 
     user
       .replicated_calls
