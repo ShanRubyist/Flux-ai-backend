@@ -30,15 +30,20 @@ class Api::V1::ReplicateController < UsageController
 
     ensure
       params.permit(:prompt, :aspect_ratio, :model)
-      SavePicToOssJob.perform_later({user: current_user, model_name: model_name, aspect_ratio: aspect_ratio, prompt: prompt, data: data })
+      SavePicToOssJob.perform_later({ user: current_user, model_name: model_name, aspect_ratio: aspect_ratio, prompt: prompt, data: data })
     end
   end
 
   def generated_images
+    params[:page] ||= 1
+    params[:per] ||= 20
+
     replicated_calls = current_user
                          .replicated_calls
-                         .where("replicated_calls.data->>'status' = ?", 'succeeded')
+                         # .where("replicated_calls.data->>'status' = ?", 'succeeded')
                          .order("created_at desc")
+                         .page(params[:page].to_i)
+                         .per(params[:per].to_i)
 
     result = replicated_calls.map do |item|
       {
@@ -47,11 +52,15 @@ class Api::V1::ReplicateController < UsageController
         created_at: item.created_at,
         aspect_ratio: item.aspect_ratio,
         cost_credits: item.cost_credits,
-        model: item.model
+        model: item.model&.sub("black-forest-labs/", ''),
+        status: item.data.fetch('status') { nil }
       }
     end
 
-    render json: result
+    render json: {
+      total: replicated_calls.total_count,
+      histories: result
+    }
   end
 
   private
