@@ -15,7 +15,7 @@ class Api::V1::ReplicateController < UsageController
 
     begin
       # webhook_url = "https://" + ENV.fetch("HOST") + "/replicate/webhook"
-      prediction = version.predict(prompt: prompt, aspect_ratio: aspect_ratio)
+      prediction = version.predict(prompt: prompt, aspect_ratio: aspect_ratio, disable_safety_checker: true)
       data = prediction.refetch
 
       until prediction.finished? do

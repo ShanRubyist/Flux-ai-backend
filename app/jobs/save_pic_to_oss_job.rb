@@ -37,11 +37,17 @@ class SavePicToOssJob < ApplicationJob
       .find_or_create_by(predict_id: predict_id)
 
     require 'open-uri'
+    if output.is_a?(Array)
+      image = output.first
+    else
+      image = output
+    end
+
     user
       .replicated_calls
       .find_by(predict_id: predict_id)
       .image
-      .attach(io: URI.open(output.first), filename: URI(output.first).path.split('/').last) unless output.first.empty?
+      .attach(io: URI.open(image), filename: URI(image).path.split('/').last) unless image.empty?
 
   rescue => e
     puts e
