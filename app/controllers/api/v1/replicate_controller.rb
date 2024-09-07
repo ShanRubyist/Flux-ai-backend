@@ -1,7 +1,7 @@
 class Api::V1::ReplicateController < UsageController
-  # rescue_from RuntimeError do |e|
-  # render json: { error: e }.to_json, status: 500
-  # end
+  rescue_from RuntimeError do |e|
+    render json: { error: e }.to_json, status: 500
+  end
 
   def predict
     prompt = params['prompt']
@@ -15,7 +15,7 @@ class Api::V1::ReplicateController < UsageController
 
     begin
       # webhook_url = "https://" + ENV.fetch("HOST") + "/replicate/webhook"
-      prediction = version.predict(prompt: prompt, aspect_ratio: aspect_ratio, disable_safety_checker: true)
+      prediction = version.predict(prompt: prompt, aspect_ratio: aspect_ratio, disable_safety_checker: true) #, safety_tolerance: 5)
       data = prediction.refetch
 
       until prediction.finished? do
@@ -23,13 +23,13 @@ class Api::V1::ReplicateController < UsageController
         data = prediction.refetch
       end
 
-      # rails 'prediction failed' if prediction.failed? || prediction.canceled?
+      raise data.fetch('error') if prediction.failed? || prediction.canceled?
+
       render json: {
         images: prediction.output
       }
-
     ensure
-      params.permit(:prompt, :aspect_ratio, :model)
+      params.permit(:prompt, :aspect_ratio, :model, :replicate)
       SavePicToOssJob.perform_later({ user: current_user, model_name: model_name, aspect_ratio: aspect_ratio, prompt: prompt, data: data })
     end
   end
@@ -40,7 +40,6 @@ class Api::V1::ReplicateController < UsageController
 
     replicated_calls = current_user
                          .replicated_calls
-                         # .where("replicated_calls.data->>'status' = ?", 'succeeded')
                          .order("created_at desc")
                          .page(params[:page].to_i)
                          .per(params[:per].to_i)
