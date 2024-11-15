@@ -15,6 +15,7 @@ Rails.application.routes.draw do
   root "users/sessions#new"
 
   post 'token', to: 'users/omniauth_callbacks#token'
+  post 'google_onetap', to: 'users/google_one_tap#google_onetap'
 
   post 'stripe_checkout', to: 'payment#stripe_checkout', as: 'stripe_checkout'
   get 'stripe_billing', to: 'payment#stripe_billing', as: 'billing'

@@ -74,3 +74,5 @@ gem 'replicate-rails', require: 'replicate_rails'
 
 gem "image_processing"
 gem "aws-sdk-s3", require: false
+
+gem 'googleauth'
