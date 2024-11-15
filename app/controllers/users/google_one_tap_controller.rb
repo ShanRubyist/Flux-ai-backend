@@ -1,12 +1,24 @@
 class Users::GoogleOneTapController < ApplicationController
-  def callback
+  def token
     if g_csrf_token_valid?
       payload = Google::Auth::IDTokens.verify_oidc(params[:credential], aud: ENV.fetch('GOOGLE_CLIENT_ID'))
-      code = payload['jti']
-      Rails.cache.write(oauth_token_cache_key(code), payload['sub'], expires_in: 1.minute)
-      redirect_to ENV.fetch('REDIRECT_SUCCESS_URL') + "?code=#{code}&origin=#{redirect_url}", allow_other_host: true
-    else
-      redirect_to ENV.fetch('REDIRECT_FAIL_URL'), allow_other_host: true
+      uid = payload['sub']
+      if uid
+        user = User.find_by(uid: uid)
+        token = user.create_new_auth_token(params[:code])
+        puts 'token is'
+        puts token
+        
+        render json: {
+          data: token
+        }, status: 200
+      else
+        render json: {
+          errors: [
+            'credential is invalid'
+          ]
+        }, status: 500
+      end
     end
   end
 
