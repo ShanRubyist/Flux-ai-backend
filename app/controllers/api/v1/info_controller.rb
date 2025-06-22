@@ -1,8 +1,14 @@
 class Api::V1::InfoController < ApplicationController
   before_action :authenticate_user!, only: [:user_info, :active_subscription_info]
-
+  include ActionController::Live
   include CreditsCounter
   include PayUtils
+
+  attr_reader :sse
+  def sse
+    # @sse ||= SSE.new(response.stream, event: "openai", retry: 3000)
+    @sse ||= SSE.new(response.stream)
+  end
 
   def user_info
     render json: {
@@ -50,5 +56,61 @@ class Api::V1::InfoController < ApplicationController
         }
       end
     }
+  end
+
+  def dynamic_urls
+    response.headers["Content-Type"] = "text/event-stream"
+    response.headers["Last-Modified"] = Time.now.httpdate
+    n=0
+    while true
+      sleep 30
+      sse.write 'ok'
+      n +=1
+      break if n>10
+    end
+
+    @sse.close rescue nil
+  end
+
+  def dynamic_urls1
+    n=0
+    while true
+      sleep 30
+      n +=1
+      break if n>10
+    end
+    render json: {
+      data: 'okkkkk'
+    }
+  end
+
+  def dynamic_urls2
+    styles = ['s1', 's2']
+    authors = ['a', 'b']
+    lora = ['a/lora1', 'a/lora2', 'b/lora3']
+
+    render json:
+             styles.map {|i| {loc: "/styles/#{i}", _i18nTransform: true}} +
+               authors.map {|i| {loc: "/authors/#{i}", _i18nTransform: true}} +
+               lora.map {|i| {loc: "/lora/#{i}",_i18nTransform: true}}
+  end
+
+  def models_info
+    render json: [
+      {
+        name: 'flux-schnell(costs 1 credit)',
+        value: 'black-forest-labs/flux-schnell'
+      },
+      {
+        name: 'flux-dev(costs 10 credits)',
+        value: 'black-forest-labs/flux-dev',
+        disabled: credit < 10
+      },
+      {
+        name: 'flux-pro(costs 20 credits)',
+        value: 'black-forest-labs/flux-pro',
+        disabled: credit < 20
+      }
+    ]
   end
 end
